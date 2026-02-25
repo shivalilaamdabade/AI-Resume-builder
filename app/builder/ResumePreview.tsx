@@ -41,14 +41,43 @@ interface ResumeData {
 
 interface ResumePreviewProps {
   data: ResumeData;
+  template?: string;
 }
 
-export default function ResumePreview({ data }: ResumePreviewProps) {
+export default function ResumePreview({ data, template = 'classic' }: ResumePreviewProps) {
+  // Filter out empty sections
+  const hasSummary = data.summary && data.summary.trim() !== "";
+  const hasEducation = data.education && data.education.some((edu: EducationEntry) => 
+    edu.institution.trim() !== "" || edu.degree.trim() !== "" || edu.year.trim() !== ""
+  );
+  const hasExperience = data.experience && data.experience.some((exp: ExperienceEntry) => 
+    exp.company.trim() !== "" || exp.position.trim() !== "" || exp.description.trim() !== ""
+  );
+  const hasProjects = data.projects && data.projects.some((proj: ProjectEntry) => 
+    proj.name.trim() !== "" || proj.description.trim() !== "" || proj.link.trim() !== ""
+  );
+  const hasSkills = data.skills && data.skills.trim() !== "";
+  const hasLinks = (data.links.github && data.links.github.trim() !== "") || 
+                  (data.links.linkedin && data.links.linkedin.trim() !== "");
+
+  // Define class based on template
+  const getTemplateClass = (baseClass: string) => {
+    if (template === 'modern') {
+      return baseClass + ' font-sans';
+    } else if (template === 'minimal') {
+      return baseClass + ' font-serif';
+    } else { // classic
+      return baseClass + ' font-sans';
+    }
+  };
+
   return (
-    <div className="font-sans text-sm">
+    <div className={getTemplateClass("text-sm")}>
       {/* Header */}
       <div className="border-b pb-4 mb-4">
-        <h1 className="text-2xl font-bold text-center">{data.personalInfo.name || "Your Name"}</h1>
+        <h1 className={`${getTemplateClass("text-2xl font-bold text-center")} ${(template === 'minimal') ? 'uppercase tracking-wide' : ''}`}>
+          {data.personalInfo.name || "Your Name"}
+        </h1>
         <div className="flex justify-center space-x-6 mt-2 text-gray-600">
           {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
           {data.personalInfo.phone && <span>{data.personalInfo.phone}</span>}
@@ -67,19 +96,21 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
       </div>
 
       {/* Summary */}
-      {data.summary && data.summary.trim() !== "" && (
+      {hasSummary && (
         <div className="mb-4">
-          <h2 className="text-lg font-semibold border-b pb-1">SUMMARY</h2>
+          <h2 className={`${getTemplateClass("text-lg font-semibold border-b pb-1")} ${(template === 'minimal') ? 'uppercase tracking-wider text-xs' : ''}`}>
+            SUMMARY
+          </h2>
           <p className="mt-2">{data.summary}</p>
         </div>
       )}
 
       {/* Education */}
-      {data.education && data.education.some(edu => 
-        edu.institution.trim() !== "" || edu.degree.trim() !== "" || edu.year.trim() !== ""
-      ) && (
+      {hasEducation && (
         <div className="mb-4">
-          <h2 className="text-lg font-semibold border-b pb-1">EDUCATION</h2>
+          <h2 className={`${getTemplateClass("text-lg font-semibold border-b pb-1")} ${(template === 'minimal') ? 'uppercase tracking-wider text-xs' : ''}`}>
+            EDUCATION
+          </h2>
           <div className="mt-2 space-y-2">
             {data.education.map((edu: EducationEntry, index: number) => {
               // Skip empty education entries
@@ -101,11 +132,11 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
       )}
 
       {/* Experience */}
-      {data.experience && data.experience.some(exp => 
-        exp.company.trim() !== "" || exp.position.trim() !== "" || exp.description.trim() !== ""
-      ) && (
+      {hasExperience && (
         <div className="mb-4">
-          <h2 className="text-lg font-semibold border-b pb-1">EXPERIENCE</h2>
+          <h2 className={`${getTemplateClass("text-lg font-semibold border-b pb-1")} ${(template === 'minimal') ? 'uppercase tracking-wider text-xs' : ''}`}>
+            EXPERIENCE
+          </h2>
           <div className="mt-2 space-y-3">
             {data.experience.map((exp: ExperienceEntry, index: number) => {
               // Skip empty experience entries
@@ -128,11 +159,11 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
       )}
 
       {/* Projects */}
-      {data.projects && data.projects.some(proj => 
-        proj.name.trim() !== "" || proj.description.trim() !== "" || proj.link.trim() !== ""
-      ) && (
+      {hasProjects && (
         <div className="mb-4">
-          <h2 className="text-lg font-semibold border-b pb-1">PROJECTS</h2>
+          <h2 className={`${getTemplateClass("text-lg font-semibold border-b pb-1")} ${(template === 'minimal') ? 'uppercase tracking-wider text-xs' : ''}`}>
+            PROJECTS
+          </h2>
           <div className="mt-2 space-y-2">
             {data.projects.map((proj: ProjectEntry, index: number) => {
               // Skip empty project entries
@@ -154,9 +185,11 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
       )}
 
       {/* Skills */}
-      {data.skills && data.skills.trim() !== "" && (
+      {hasSkills && (
         <div>
-          <h2 className="text-lg font-semibold border-b pb-1">SKILLS</h2>
+          <h2 className={`${getTemplateClass("text-lg font-semibold border-b pb-1")} ${(template === 'minimal') ? 'uppercase tracking-wider text-xs' : ''}`}>
+            SKILLS
+          </h2>
           <div className="mt-2">
             {data.skills}
           </div>

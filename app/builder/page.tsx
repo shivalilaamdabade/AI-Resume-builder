@@ -40,6 +40,21 @@ export default function BuilderPage() {
     localStorage.setItem('resumeBuilderData', JSON.stringify(resumeData));
   }, [resumeData]);
 
+  const [template, setTemplate] = useState('classic');
+
+  // Load template from localStorage on component mount
+  useEffect(() => {
+    const savedTemplate = localStorage.getItem('resumeTemplate');
+    if (savedTemplate) {
+      setTemplate(savedTemplate);
+    }
+  }, []);
+
+  // Save template to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('resumeTemplate', template);
+  }, [template]);
+
   // Calculate ATS Score
   const calculateATSScore = (): number => {
     let score = 0;
@@ -130,8 +145,55 @@ export default function BuilderPage() {
     return suggestions;
   };
 
+  // Get improvement suggestions
+  const getImprovementSuggestions = (): string[] => {
+    const improvements: string[] = [];
+
+    if (resumeData.projects.length < 2) {
+      improvements.push("Add more projects to strengthen your portfolio.");
+    }
+
+    const hasNumbersInBullets = [
+      ...resumeData.experience.map(exp => exp.description),
+      ...resumeData.projects.map(proj => proj.description)
+    ].some(text => /[%0-9kmb]/i.test(text));
+
+    if (!hasNumbersInBullets) {
+      improvements.push("Include metrics and numbers to demonstrate impact.");
+    }
+
+    const summaryWords = resumeData.summary.trim().split(/\s+/).filter(word => word.length > 0);
+    if (summaryWords.length < 40) {
+      improvements.push("Expand your summary to better showcase your experience.");
+    }
+
+    const skillsList = resumeData.skills.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0);
+    if (skillsList.length < 8) {
+      improvements.push("Add more relevant skills to improve keyword matching.");
+    }
+
+    if (!resumeData.experience.some(exp => exp.company.trim() !== "")) {
+      improvements.push("Consider adding internship or project work experience.");
+    }
+
+    return improvements.slice(0, 3); // Limit to top 3 improvements
+  };
+
+  // Check if bullet starts with action verb
+  const startsWithActionVerb = (text: string): boolean => {
+    const actionVerbs = ['Built', 'Developed', 'Designed', 'Implemented', 'Led', 'Improved', 'Created', 'Optimized', 'Automated'];
+    const trimmedText = text.trim();
+    return actionVerbs.some(verb => trimmedText.startsWith(verb));
+  };
+
+  // Check if bullet has numeric indicators
+  const hasNumericIndicator = (text: string): boolean => {
+    return /[%0-9kmb]/i.test(text);
+  };
+
   const atsScore = calculateATSScore();
   const suggestions = getSuggestions();
+  const improvementSuggestions = getImprovementSuggestions();
 
   const handleInputChange = (field: string, value: string) => {
     setResumeData(prev => ({
@@ -263,6 +325,43 @@ export default function BuilderPage() {
           {/* Left Column - Form Sections */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Resume Builder</h2>
+            
+            {/* Template Selection */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Choose Template</h3>
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => setTemplate('classic')}
+                  className={`px-4 py-2 rounded-md ${
+                    template === 'classic' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Classic
+                </button>
+                <button 
+                  onClick={() => setTemplate('modern')}
+                  className={`px-4 py-2 rounded-md ${
+                    template === 'modern' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Modern
+                </button>
+                <button 
+                  onClick={() => setTemplate('minimal')}
+                  className={`px-4 py-2 rounded-md ${
+                    template === 'minimal' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Minimal
+                </button>
+              </div>
+            </div>
             
             <button 
               onClick={loadSampleData}
@@ -425,6 +524,17 @@ export default function BuilderPage() {
                         rows={2}
                         className="w-full p-2 border border-gray-300 rounded-md"
                       />
+                      {/* Bullet guidance */}
+                      {exp.description.trim() && (
+                        <div className="mt-2 text-xs">
+                          {!startsWithActionVerb(exp.description) && (
+                            <div className="text-orange-600">• Start with a strong action verb.</div>
+                          )}
+                          {!hasNumericIndicator(exp.description) && (
+                            <div className="text-orange-600">• Add measurable impact (numbers).</div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -462,6 +572,17 @@ export default function BuilderPage() {
                         rows={2}
                         className="w-full p-2 border border-gray-300 rounded-md"
                       />
+                      {/* Bullet guidance */}
+                      {proj.description.trim() && (
+                        <div className="mt-2 text-xs">
+                          {!startsWithActionVerb(proj.description) && (
+                            <div className="text-orange-600">• Start with a strong action verb.</div>
+                          )}
+                          {!hasNumericIndicator(proj.description) && (
+                            <div className="text-orange-600">• Add measurable impact (numbers).</div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-1">Link</label>
@@ -553,9 +674,22 @@ export default function BuilderPage() {
                   </ul>
                 </div>
               )}
+
+              {improvementSuggestions.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Top 3 Improvements:</h4>
+                  <ul className="space-y-1">
+                    {improvementSuggestions.map((improvement, index) => (
+                      <li key={index} className="text-sm text-gray-600 flex items-start">
+                        <span className="text-green-500 mr-2">•</span> {improvement}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
             <div className="border border-gray-200 rounded-md p-4 min-h-[400px]">
-              <ResumePreview data={resumeData} />
+              <ResumePreview data={resumeData} template={template} />
             </div>
           </div>
         </div>
