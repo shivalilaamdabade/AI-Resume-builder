@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import ResumePreview from "./ResumePreview";
 
@@ -22,6 +22,116 @@ export default function BuilderPage() {
       linkedin: "",
     },
   });
+
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('resumeBuilderData');
+    if (savedData) {
+      try {
+        setResumeData(JSON.parse(savedData));
+      } catch (e) {
+        console.error('Failed to parse saved data:', e);
+      }
+    }
+  }, []);
+
+  // Autosave to localStorage whenever resumeData changes
+  useEffect(() => {
+    localStorage.setItem('resumeBuilderData', JSON.stringify(resumeData));
+  }, [resumeData]);
+
+  // Calculate ATS Score
+  const calculateATSScore = (): number => {
+    let score = 0;
+    
+    // Check summary length (40-120 words)
+    const summaryWords = resumeData.summary.trim().split(/\s+/).filter(word => word.length > 0);
+    if (summaryWords.length >= 40 && summaryWords.length <= 120) {
+      score += 15;
+    }
+    
+    // Check for at least 2 projects
+    if (resumeData.projects.length >= 2) {
+      score += 10;
+    }
+    
+    // Check for at least 1 experience entry
+    if (resumeData.experience.some(exp => exp.company.trim() !== "")) {
+      score += 10;
+    }
+    
+    // Check for at least 8 skills
+    const skillsList = resumeData.skills.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0);
+    if (skillsList.length >= 8) {
+      score += 10;
+    }
+    
+    // Check for GitHub or LinkedIn link
+    if (resumeData.links.github.trim() !== "" || resumeData.links.linkedin.trim() !== "") {
+      score += 10;
+    }
+    
+    // Check experience/project bullets for numbers (% X k etc.)
+    const hasNumbersInBullets = [
+      ...resumeData.experience.map(exp => exp.description),
+      ...resumeData.projects.map(proj => proj.description)
+    ].some(text => /[%0-9kmb]/i.test(text));
+    
+    if (hasNumbersInBullets) {
+      score += 15;
+    }
+    
+    // Check for complete education fields
+    const hasCompleteEducation = resumeData.education.some(edu => 
+      edu.institution.trim() !== "" && edu.degree.trim() !== "" && edu.year.trim() !== ""
+    );
+    if (hasCompleteEducation) {
+      score += 10;
+    }
+    
+    return Math.min(score, 100); // Cap at 100
+  };
+
+  // Generate suggestions
+  const getSuggestions = (): string[] => {
+    const suggestions: string[] = [];
+    
+    const summaryWords = resumeData.summary.trim().split(/\s+/).filter(word => word.length > 0);
+    if (summaryWords.length < 40 || summaryWords.length > 120) {
+      suggestions.push("Write a stronger summary (40–120 words)." );
+    }
+    
+    if (resumeData.projects.length < 2) {
+      suggestions.push("Add at least 2 projects." );
+    }
+    
+    if (!resumeData.experience.some(exp => exp.company.trim() !== "")) {
+      suggestions.push("Add at least 1 experience entry." );
+    }
+    
+    const skillsList = resumeData.skills.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0);
+    if (skillsList.length < 8) {
+      suggestions.push("Add more skills (target 8+)." );
+    }
+    
+    const hasNumbersInBullets = [
+      ...resumeData.experience.map(exp => exp.description),
+      ...resumeData.projects.map(proj => proj.description)
+    ].some(text => /[%0-9kmb]/i.test(text));
+    
+    if (!hasNumbersInBullets) {
+      suggestions.push("Add measurable impact (numbers) in bullets." );
+    }
+    
+    if (suggestions.length > 3) {
+      return suggestions.slice(0, 3); // Limit to 3 suggestions
+    }
+    
+    return suggestions;
+  };
+
+  const atsScore = calculateATSScore();
+  const suggestions = getSuggestions();
 
   const handleInputChange = (field: string, value: string) => {
     setResumeData(prev => ({
@@ -414,7 +524,37 @@ export default function BuilderPage() {
           {/* Right Column - Live Preview Panel */}
           <div className="bg-white p-6 rounded-lg shadow-md h-fit">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Live Preview</h3>
-            <div className="border border-gray-200 rounded-md p-4 min-h-[600px]">
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium text-gray-700">ATS Readiness Score</span>
+                <span className="text-sm font-bold text-gray-900">{atsScore}/100</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className={`h-2.5 rounded-full ${
+                    atsScore < 30 ? 'bg-red-500' : 
+                    atsScore < 60 ? 'bg-orange-400' : 
+                    atsScore < 80 ? 'bg-yellow-500' : 
+                    'bg-green-500'
+                  }`} 
+                  style={{ width: `${atsScore}%` }}
+                ></div>
+              </div>
+              
+              {suggestions.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Suggestions:</h4>
+                  <ul className="space-y-1">
+                    {suggestions.map((suggestion, index) => (
+                      <li key={index} className="text-sm text-gray-600 flex items-start">
+                        <span className="text-blue-500 mr-2">•</span> {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <div className="border border-gray-200 rounded-md p-4 min-h-[400px]">
               <ResumePreview data={resumeData} />
             </div>
           </div>

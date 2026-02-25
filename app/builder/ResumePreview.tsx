@@ -67,7 +67,7 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
       </div>
 
       {/* Summary */}
-      {data.summary && (
+      {data.summary && data.summary.trim() !== "" && (
         <div className="mb-4">
           <h2 className="text-lg font-semibold border-b pb-1">SUMMARY</h2>
           <p className="mt-2">{data.summary}</p>
@@ -75,66 +75,90 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
       )}
 
       {/* Education */}
-      {data.education && data.education.length > 0 && (
+      {data.education && data.education.some(edu => 
+        edu.institution.trim() !== "" || edu.degree.trim() !== "" || edu.year.trim() !== ""
+      ) && (
         <div className="mb-4">
           <h2 className="text-lg font-semibold border-b pb-1">EDUCATION</h2>
           <div className="mt-2 space-y-2">
-            {data.education.map((edu: EducationEntry, index: number) => (
-              <div key={index}>
-                <div className="flex justify-between">
-                  <span className="font-medium">{edu.institution || "Institution"}</span>
-                  <span>{edu.year || "Year"}</span>
+            {data.education.map((edu: EducationEntry, index: number) => {
+              // Skip empty education entries
+              if (edu.institution.trim() === "" && edu.degree.trim() === "" && edu.year.trim() === "") {
+                return null;
+              }
+              return (
+                <div key={index}>
+                  <div className="flex justify-between">
+                    <span className="font-medium">{edu.institution || "Institution"}</span>
+                    <span>{edu.year || "Year"}</span>
+                  </div>
+                  <div>{edu.degree || "Degree"}</div>
                 </div>
-                <div>{edu.degree || "Degree"}</div>
-              </div>
-            ))}
+              );
+            }).filter(Boolean)}
           </div>
         </div>
       )}
 
       {/* Experience */}
-      {data.experience && data.experience.length > 0 && (
+      {data.experience && data.experience.some(exp => 
+        exp.company.trim() !== "" || exp.position.trim() !== "" || exp.description.trim() !== ""
+      ) && (
         <div className="mb-4">
           <h2 className="text-lg font-semibold border-b pb-1">EXPERIENCE</h2>
           <div className="mt-2 space-y-3">
-            {data.experience.map((exp: ExperienceEntry, index: number) => (
-              <div key={index}>
-                <div className="flex justify-between">
-                  <span className="font-medium">{exp.position || "Position"}</span>
-                  <span>{exp.duration || "Duration"}</span>
+            {data.experience.map((exp: ExperienceEntry, index: number) => {
+              // Skip empty experience entries
+              if (exp.company.trim() === "" && exp.position.trim() === "" && exp.description.trim() === "") {
+                return null;
+              }
+              return (
+                <div key={index}>
+                  <div className="flex justify-between">
+                    <span className="font-medium">{exp.position || "Position"}</span>
+                    <span>{exp.duration || "Duration"}</span>
+                  </div>
+                  <div className="font-medium text-gray-700">{exp.company || "Company"}</div>
+                  <div className="mt-1">{exp.description || "Description"}</div>
                 </div>
-                <div className="font-medium text-gray-700">{exp.company || "Company"}</div>
-                <div className="mt-1">{exp.description || "Description"}</div>
-              </div>
-            ))}
+              );
+            }).filter(Boolean)}
           </div>
         </div>
       )}
 
       {/* Projects */}
-      {data.projects && data.projects.length > 0 && (
+      {data.projects && data.projects.some(proj => 
+        proj.name.trim() !== "" || proj.description.trim() !== "" || proj.link.trim() !== ""
+      ) && (
         <div className="mb-4">
           <h2 className="text-lg font-semibold border-b pb-1">PROJECTS</h2>
           <div className="mt-2 space-y-2">
-            {data.projects.map((proj: ProjectEntry, index: number) => (
-              <div key={index}>
-                <div className="flex justify-between">
-                  <span className="font-medium">{proj.name || "Project Name"}</span>
-                  {proj.link && <span>{proj.link}</span>}
+            {data.projects.map((proj: ProjectEntry, index: number) => {
+              // Skip empty project entries
+              if (proj.name.trim() === "" && proj.description.trim() === "" && proj.link.trim() === "") {
+                return null;
+              }
+              return (
+                <div key={index}>
+                  <div className="flex justify-between">
+                    <span className="font-medium">{proj.name || "Project Name"}</span>
+                    {proj.link && <span>{proj.link}</span>}
+                  </div>
+                  <div>{proj.description || "Project description"}</div>
                 </div>
-                <div>{proj.description || "Project description"}</div>
-              </div>
-            ))}
+              );
+            }).filter(Boolean)}
           </div>
         </div>
       )}
 
       {/* Skills */}
-      {data.skills && (
+      {data.skills && data.skills.trim() !== "" && (
         <div>
           <h2 className="text-lg font-semibold border-b pb-1">SKILLS</h2>
           <div className="mt-2">
-            {data.skills || "List your skills here"}
+            {data.skills}
           </div>
         </div>
       )}
