@@ -123,7 +123,7 @@ export default function ResumePreview({ data, template = 'classic', colorTheme =
             {/* Skills in sidebar */}
             {hasSkills && (
               <div className="mb-6">
-                <h2 className={`${getTemplateClass("text-base font-semibold pb-1 mb-2")} ${(template === 'minimal') ? 'uppercase tracking-wider text-xs' : ''}`} style={{ borderBottom: `2px solid ${accentColor}` }}>
+                <h2 className={`${getTemplateClass("text-base font-semibold pb-1 mb-2")} ${(template as string === 'minimal') ? 'uppercase tracking-wider text-xs' : ''}`} style={{ borderBottom: `2px solid ${accentColor}` }}>
                   SKILLS
                 </h2>
                 <div className="space-y-2">
@@ -263,7 +263,7 @@ export default function ResumePreview({ data, template = 'classic', colorTheme =
         <div>
           {/* Header */}
           <div className="border-b pb-4 mb-4" style={template === 'classic' ? { borderBottom: `2px solid ${accentColor}` } : {}}>
-            <h1 className={`${getTemplateClass("text-2xl font-bold text-center print:text-2xl")} ${(template === 'minimal') ? 'uppercase tracking-wide' : ''} print:uppercase print:tracking-wide`}>
+            <h1 className={`${getTemplateClass("text-2xl font-bold text-center print:text-2xl")} ${(template as string === 'minimal') ? 'uppercase tracking-wide' : ''} print:uppercase print:tracking-wide`}>
               {data.personalInfo.name || "Your Name"}
             </h1>
             <div className="flex justify-center space-x-6 mt-2 text-gray-600">

@@ -41,6 +41,155 @@ export default function PreviewPage() {
 
   const [template, setTemplate] = useState('classic');
   const [colorTheme, setColorTheme] = useState('teal'); // Default teal theme
+  const [atsScore, setAtsScore] = useState<number>(0);
+  const [improvementSuggestions, setImprovementSuggestions] = useState<string[]>([]);
+
+  // Calculate ATS Score
+  const calculateATSScore = (): number => {
+    let score = 0;
+    
+    // +10 if name provided
+    if (resumeData.personalInfo.name.trim() !== "") {
+      score += 10;
+    }
+    
+    // +10 if email provided
+    if (resumeData.personalInfo.email.trim() !== "") {
+      score += 10;
+    }
+    
+    // +10 if summary > 50 chars
+    if (resumeData.summary.trim().length > 50) {
+      score += 10;
+    }
+    
+    // +15 if at least 1 experience entry with bullets
+    if (resumeData.experience.some(exp => 
+      exp.company.trim() !== "" && 
+      exp.position.trim() !== "" && 
+      exp.description.trim() !== ""
+    )) {
+      score += 15;
+    }
+    
+    // +10 if at least 1 education entry
+    if (resumeData.education.some(edu => 
+      edu.institution.trim() !== "" || 
+      edu.degree.trim() !== "" || 
+      edu.year.trim() !== ""
+    )) {
+      score += 10;
+    }
+    
+    // +10 if at least 5 skills added
+    const totalSkills = [...resumeData.skills.technical, ...resumeData.skills.soft, ...resumeData.skills.tools].length;
+    if (totalSkills >= 5) {
+      score += 10;
+    }
+    
+    // +10 if at least 1 project added
+    if (resumeData.projects.some(proj => 
+      proj.title.trim() !== "" || 
+      proj.description.trim() !== ""
+    )) {
+      score += 10;
+    }
+    
+    // +5 if phone provided
+    if (resumeData.personalInfo.phone.trim() !== "") {
+      score += 5;
+    }
+    
+    // +5 if LinkedIn provided
+    if (resumeData.links.linkedin.trim() !== "") {
+      score += 5;
+    }
+    
+    // +5 if GitHub provided
+    if (resumeData.links.github.trim() !== "") {
+      score += 5;
+    }
+    
+    // +10 if summary contains action verbs (built, led, designed, improved, etc.)
+    const actionVerbs = ['built', 'led', 'designed', 'improved', 'created', 'managed', 'developed', 'implemented', 'launched', 'established'];
+    const summaryLower = resumeData.summary.toLowerCase();
+    if (actionVerbs.some(verb => summaryLower.includes(verb))) {
+      score += 10;
+    }
+    
+    return Math.min(score, 100); // Cap at 100
+  };
+
+  // Generate improvement suggestions
+  const getImprovementSuggestions = (): string[] => {
+    const suggestions: string[] = [];
+    
+    if (resumeData.personalInfo.name.trim() === "") {
+      suggestions.push("Add your name (+10 points)");
+    }
+    
+    if (resumeData.personalInfo.email.trim() === "") {
+      suggestions.push("Add your email (+10 points)");
+    }
+    
+    if (resumeData.summary.trim().length <= 50) {
+      suggestions.push("Add a professional summary (>50 chars, +10 points)");
+    }
+    
+    if (!resumeData.experience.some(exp => 
+      exp.company.trim() !== "" && 
+      exp.position.trim() !== "" && 
+      exp.description.trim() !== ""
+    )) {
+      suggestions.push("Add at least one experience entry with detailed description (+15 points)");
+    }
+    
+    if (!resumeData.education.some(edu => 
+      edu.institution.trim() !== "" || 
+      edu.degree.trim() !== "" || 
+      edu.year.trim() !== ""
+    )) {
+      suggestions.push("Add at least one education entry (+10 points)");
+    }
+    
+    const totalSkills = [...resumeData.skills.technical, ...resumeData.skills.soft, ...resumeData.skills.tools].length;
+    if (totalSkills < 5) {
+      suggestions.push(`Add more skills (at least ${5 - totalSkills} more, +10 points)`);
+    }
+    
+    if (!resumeData.projects.some(proj => 
+      proj.title.trim() !== "" || 
+      proj.description.trim() !== ""
+    )) {
+      suggestions.push("Add at least one project (+10 points)");
+    }
+    
+    if (resumeData.personalInfo.phone.trim() === "") {
+      suggestions.push("Add your phone number (+5 points)");
+    }
+    
+    if (resumeData.links.linkedin.trim() === "") {
+      suggestions.push("Add your LinkedIn profile (+5 points)");
+    }
+    
+    if (resumeData.links.github.trim() === "") {
+      suggestions.push("Add your GitHub profile (+5 points)");
+    }
+    
+    const actionVerbs = ['built', 'led', 'designed', 'improved', 'created', 'managed', 'developed', 'implemented', 'launched', 'established'];
+    const summaryLower = resumeData.summary.toLowerCase();
+    if (!actionVerbs.some(verb => summaryLower.includes(verb))) {
+      suggestions.push("Include action verbs in your summary (built, led, designed, etc., +10 points)");
+    }
+    
+    return suggestions.slice(0, 5); // Limit to top 5 suggestions
+  };
+
+  // Update ATS score and suggestions when resume data changes
+  useEffect(() => {
+    setAtsScore(calculateATSScore());
+    setImprovementSuggestions(getImprovementSuggestions());
+  }, [resumeData]);
 
   // Load template from localStorage on component mount
   useEffect(() => {
@@ -198,6 +347,55 @@ export default function PreviewPage() {
         <div className="mb-6 bg-white p-4 rounded-lg shadow-md print:hidden">
           <div className="flex flex-wrap gap-3 justify-between items-center">
             <div className="w-full">
+              {/* ATS Score Display */}
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-gray-700">ATS Score</h3>
+                  <span className={`text-lg font-bold ${
+                    atsScore < 41 ? 'text-red-600' : 
+                    atsScore < 71 ? 'text-amber-600' : 
+                    'text-green-600'
+                  }`}>
+                    {atsScore}/100
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className={`h-2.5 rounded-full ${
+                      atsScore < 41 ? 'bg-red-500' : 
+                      atsScore < 71 ? 'bg-amber-400' : 
+                      'bg-green-500'
+                    }`} 
+                    style={{ width: `${atsScore}%` }}
+                  ></div>
+                </div>
+                <div className="mt-1 text-sm">
+                  <span className={`font-medium ${
+                    atsScore < 41 ? 'text-red-600' : 
+                    atsScore < 71 ? 'text-amber-600' : 
+                    'text-green-600'
+                  }`}>
+                    {atsScore < 41 ? 'Needs Work' : 
+                     atsScore < 71 ? 'Getting There' : 
+                     'Strong Resume'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Improvement Suggestions */}
+              {improvementSuggestions.length > 0 && (
+                <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="text-md font-semibold text-gray-700 mb-2">Top 3 Improvements:</h4>
+                  <ul className="space-y-1">
+                    {improvementSuggestions.map((suggestion, index) => (
+                      <li key={index} className="text-sm text-gray-600 flex items-start">
+                        <span className="text-blue-500 mr-2">•</span> {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
               <h3 className="text-lg font-semibold text-gray-700 mb-3">Choose Template</h3>
               <div className="flex space-x-2 mb-4">
                 <button 

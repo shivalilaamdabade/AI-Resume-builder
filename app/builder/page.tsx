@@ -15,11 +15,11 @@ export default function BuilderPage() {
     summary: "",
     education: [{ institution: "", degree: "", year: "" }],
     experience: [{ company: "", position: "", duration: "", description: "" }],
-    projects: [{ title: "", description: "", techStack: [], liveUrl: "", githubUrl: "" }], // Updated projects structure
+    projects: [{ title: "", description: "", techStack: [] as string[], liveUrl: "", githubUrl: "" }], // Updated projects structure
     skills: {
-      technical: [],
-      soft: [],
-      tools: []
+      technical: [] as string[],
+      soft: [] as string[],
+      tools: [] as string[]
     }, // New skills structure
     links: {
       github: "",
@@ -87,126 +87,141 @@ export default function BuilderPage() {
   const calculateATSScore = (): number => {
     let score = 0;
     
-    // Check summary length (40-120 words)
-    const summaryWords = resumeData.summary.trim().split(/\s+/).filter(word => word.length > 0);
-    if (summaryWords.length >= 40 && summaryWords.length <= 120) {
+    // +10 if name provided
+    if (resumeData.personalInfo.name.trim() !== "") {
+      score += 10;
+    }
+    
+    // +10 if email provided
+    if (resumeData.personalInfo.email.trim() !== "") {
+      score += 10;
+    }
+    
+    // +10 if summary > 50 chars
+    if (resumeData.summary.trim().length > 50) {
+      score += 10;
+    }
+    
+    // +15 if at least 1 experience entry with bullets
+    if (resumeData.experience.some(exp => 
+      exp.company.trim() !== "" && 
+      exp.position.trim() !== "" && 
+      exp.description.trim() !== ""
+    )) {
       score += 15;
     }
     
-    // Check for at least 2 projects
-    if (resumeData.projects.length >= 2) {
+    // +10 if at least 1 education entry
+    if (resumeData.education.some(edu => 
+      edu.institution.trim() !== "" || 
+      edu.degree.trim() !== "" || 
+      edu.year.trim() !== ""
+    )) {
       score += 10;
     }
     
-    // Check for at least 1 experience entry
-    if (resumeData.experience.some(exp => exp.company.trim() !== "")) {
-      score += 10;
-    }
-    
-    // Check for at least 8 skills total
+    // +10 if at least 5 skills added
     const totalSkills = [...resumeData.skills.technical, ...resumeData.skills.soft, ...resumeData.skills.tools].length;
-    if (totalSkills >= 8) {
+    if (totalSkills >= 5) {
       score += 10;
     }
     
-    // Check for GitHub or LinkedIn link
-    if (resumeData.links.github.trim() !== "" || resumeData.links.linkedin.trim() !== "") {
+    // +10 if at least 1 project added
+    if (resumeData.projects.some(proj => 
+      proj.title.trim() !== "" || 
+      proj.description.trim() !== ""
+    )) {
       score += 10;
     }
     
-    // Check experience/project bullets for numbers (% X k etc.)
-    const hasNumbersInBullets = [
-      ...resumeData.experience.map(exp => exp.description),
-      ...resumeData.projects.map(proj => proj.description)
-    ].some(text => /[%0-9kmb]/i.test(text));
-    
-    if (hasNumbersInBullets) {
-      score += 15;
+    // +5 if phone provided
+    if (resumeData.personalInfo.phone.trim() !== "") {
+      score += 5;
     }
     
-    // Check for complete education fields
-    const hasCompleteEducation = resumeData.education.some(edu => 
-      edu.institution.trim() !== "" && edu.degree.trim() !== "" && edu.year.trim() !== ""
-    );
-    if (hasCompleteEducation) {
+    // +5 if LinkedIn provided
+    if (resumeData.links.linkedin.trim() !== "") {
+      score += 5;
+    }
+    
+    // +5 if GitHub provided
+    if (resumeData.links.github.trim() !== "") {
+      score += 5;
+    }
+    
+    // +10 if summary contains action verbs (built, led, designed, improved, etc.)
+    const actionVerbs = ['built', 'led', 'designed', 'improved', 'created', 'managed', 'developed', 'implemented', 'launched', 'established'];
+    const summaryLower = resumeData.summary.toLowerCase();
+    if (actionVerbs.some(verb => summaryLower.includes(verb))) {
       score += 10;
     }
     
     return Math.min(score, 100); // Cap at 100
   };
 
-  // Generate suggestions
-  const getSuggestions = (): string[] => {
+  // Generate improvement suggestions
+  const getImprovementSuggestions = (): string[] => {
     const suggestions: string[] = [];
     
-    const summaryWords = resumeData.summary.trim().split(/\s+/).filter(word => word.length > 0);
-    if (summaryWords.length < 40 || summaryWords.length > 120) {
-      suggestions.push("Write a stronger summary (40–120 words)." );
+    if (resumeData.personalInfo.name.trim() === "") {
+      suggestions.push("Add your name (+10 points)");
     }
     
-    if (resumeData.projects.length < 2) {
-      suggestions.push("Add at least 2 projects." );
+    if (resumeData.personalInfo.email.trim() === "") {
+      suggestions.push("Add your email (+10 points)");
     }
     
-    if (!resumeData.experience.some(exp => exp.company.trim() !== "")) {
-      suggestions.push("Add at least 1 experience entry." );
+    if (resumeData.summary.trim().length <= 50) {
+      suggestions.push("Add a professional summary (>50 chars, +10 points)");
     }
     
-    // Check for at least 8 skills total
+    if (!resumeData.experience.some(exp => 
+      exp.company.trim() !== "" && 
+      exp.position.trim() !== "" && 
+      exp.description.trim() !== ""
+    )) {
+      suggestions.push("Add at least one experience entry with detailed description (+15 points)");
+    }
+    
+    if (!resumeData.education.some(edu => 
+      edu.institution.trim() !== "" || 
+      edu.degree.trim() !== "" || 
+      edu.year.trim() !== ""
+    )) {
+      suggestions.push("Add at least one education entry (+10 points)");
+    }
+    
     const totalSkills = [...resumeData.skills.technical, ...resumeData.skills.soft, ...resumeData.skills.tools].length;
-    if (totalSkills < 8) {
-      suggestions.push("Add more skills (target 8+)." );
+    if (totalSkills < 5) {
+      suggestions.push(`Add more skills (at least ${5 - totalSkills} more, +10 points)`);
     }
     
-    const hasNumbersInBullets = [
-      ...resumeData.experience.map(exp => exp.description),
-      ...resumeData.projects.map(proj => proj.description)
-    ].some(text => /[%0-9kmb]/i.test(text));
-    
-    if (!hasNumbersInBullets) {
-      suggestions.push("Add measurable impact (numbers) in bullets." );
+    if (!resumeData.projects.some(proj => 
+      proj.title.trim() !== "" || 
+      proj.description.trim() !== ""
+    )) {
+      suggestions.push("Add at least one project (+10 points)");
     }
     
-    if (suggestions.length > 3) {
-      return suggestions.slice(0, 3); // Limit to 3 suggestions
+    if (resumeData.personalInfo.phone.trim() === "") {
+      suggestions.push("Add your phone number (+5 points)");
     }
     
-    return suggestions;
-  };
-
-  // Get improvement suggestions
-  const getImprovementSuggestions = (): string[] => {
-    const improvements: string[] = [];
-
-    if (resumeData.projects.length < 2) {
-      improvements.push("Add more projects to strengthen your portfolio.");
+    if (resumeData.links.linkedin.trim() === "") {
+      suggestions.push("Add your LinkedIn profile (+5 points)");
     }
-
-    const hasNumbersInBullets = [
-      ...resumeData.experience.map(exp => exp.description),
-      ...resumeData.projects.map(proj => proj.description)
-    ].some(text => /[%0-9kmb]/i.test(text));
-
-    if (!hasNumbersInBullets) {
-      improvements.push("Include metrics and numbers to demonstrate impact.");
+    
+    if (resumeData.links.github.trim() === "") {
+      suggestions.push("Add your GitHub profile (+5 points)");
     }
-
-    const summaryWords = resumeData.summary.trim().split(/\s+/).filter(word => word.length > 0);
-    if (summaryWords.length < 40) {
-      improvements.push("Expand your summary to better showcase your experience.");
+    
+    const actionVerbs = ['built', 'led', 'designed', 'improved', 'created', 'managed', 'developed', 'implemented', 'launched', 'established'];
+    const summaryLower = resumeData.summary.toLowerCase();
+    if (!actionVerbs.some(verb => summaryLower.includes(verb))) {
+      suggestions.push("Include action verbs in your summary (built, led, designed, etc., +10 points)");
     }
-
-    // Check for at least 8 skills total
-    const totalSkills = [...resumeData.skills.technical, ...resumeData.skills.soft, ...resumeData.skills.tools].length;
-    if (totalSkills < 8) {
-      improvements.push("Add more relevant skills to improve keyword matching.");
-    }
-
-    if (!resumeData.experience.some(exp => exp.company.trim() !== "")) {
-      improvements.push("Consider adding internship or project work experience.");
-    }
-
-    return improvements.slice(0, 3); // Limit to top 3 improvements
+    
+    return suggestions.slice(0, 5); // Limit to top 5 suggestions
   };
 
   // Handle skill input (Enter key to add skill)
@@ -254,7 +269,7 @@ export default function BuilderPage() {
         ...prev,
         skills: {
           ...prev.skills,
-          [category]: Array.from(new Set([...prev.skills[category], ...newSkills])) // Use Set to avoid duplicates
+          [category]: Array.from(new Set([...prev.skills[category], ...newSkills])) as string[] // Use Set to avoid duplicates
         }
       }));
     }
@@ -327,7 +342,6 @@ export default function BuilderPage() {
   };
 
   const atsScore = calculateATSScore();
-  const suggestions = getSuggestions();
   const improvementSuggestions = getImprovementSuggestions();
 
   // Function to copy resume as plain text
@@ -1042,11 +1056,11 @@ export default function BuilderPage() {
                 ></div>
               </div>
               
-              {suggestions.length > 0 && (
+              {improvementSuggestions.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Suggestions:</h4>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Top 3 Improvements:</h4>
                   <ul className="space-y-1">
-                    {suggestions.map((suggestion, index) => (
+                    {improvementSuggestions.map((suggestion, index) => (
                       <li key={index} className="text-sm text-gray-600 flex items-start">
                         <span className="text-blue-500 mr-2">•</span> {suggestion}
                       </li>
