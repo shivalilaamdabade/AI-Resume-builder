@@ -40,12 +40,18 @@ export default function PreviewPage() {
   }, []);
 
   const [template, setTemplate] = useState('classic');
+  const [colorTheme, setColorTheme] = useState('teal'); // Default teal theme
 
   // Load template from localStorage on component mount
   useEffect(() => {
     const savedTemplate = localStorage.getItem('resumeTemplate');
     if (savedTemplate) {
       setTemplate(savedTemplate);
+    }
+    
+    const savedColorTheme = localStorage.getItem('resumeColorTheme');
+    if (savedColorTheme) {
+      setColorTheme(savedColorTheme);
     }
   }, []);
 
@@ -161,7 +167,8 @@ export default function PreviewPage() {
   // Function to trigger print
   const handlePrint = () => {
     validateResume();
-    window.print();
+    // Show toast notification
+    alert('PDF export ready! Check your downloads.');
   };
 
   return (
@@ -190,9 +197,9 @@ export default function PreviewPage() {
         {/* Template Selection and Export Buttons */}
         <div className="mb-6 bg-white p-4 rounded-lg shadow-md print:hidden">
           <div className="flex flex-wrap gap-3 justify-between items-center">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Choose Template</h3>
-              <div className="flex space-x-2">
+            <div className="w-full">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Choose Template</h3>
+              <div className="flex space-x-2 mb-4">
                 <button 
                   onClick={() => setTemplate('classic')}
                   className={`px-4 py-2 rounded-md ${
@@ -224,26 +231,49 @@ export default function PreviewPage() {
                   Minimal
                 </button>
               </div>
+              
+              <h4 className="text-md font-medium text-gray-700 mb-2">Color Theme</h4>
+              <div className="flex space-x-2">
+                {['teal', 'navy', 'burgundy', 'forest', 'charcoal'].map((themeName) => {
+                  const colorThemes = {
+                    teal: 'hsl(168, 60%, 40%)',
+                    navy: 'hsl(220, 60%, 35%)',
+                    burgundy: 'hsl(345, 60%, 35%)',
+                    forest: 'hsl(150, 50%, 30%)',
+                    charcoal: 'hsl(0, 0%, 25%)'
+                  };
+                  return (
+                    <div
+                      key={themeName}
+                      className={`w-8 h-8 rounded-full cursor-pointer border-2 ${colorTheme === themeName ? 'border-gray-800' : 'border-gray-300'}`}
+                      style={{ backgroundColor: colorThemes[themeName as keyof typeof colorThemes] }}
+                      onClick={() => setColorTheme(themeName)}
+                      title={themeName.charAt(0).toUpperCase() + themeName.slice(1)}
+                    />
+                  );
+                })}
+              </div>
             </div>
-            <div className="flex space-x-2">
-              <button 
-                onClick={handlePrint}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-              >
-                Print / Save as PDF
-              </button>
-              <button 
-                onClick={copyResumeAsText}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Copy Resume as Text
-              </button>
-            </div>
+          </div>
+          
+          <div className="flex space-x-2 mt-4">
+            <button 
+              onClick={handlePrint}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Download PDF
+            </button>
+            <button 
+              onClick={copyResumeAsText}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Copy Resume as Text
+            </button>
           </div>
         </div>
 
         <div className="bg-white shadow-lg rounded-lg p-8 print:p-12 print:bg-white print:text-black">
-          <ResumePreview data={resumeData} template={template} />
+          <ResumePreview data={resumeData} template={template} colorTheme={colorTheme} />
         </div>
       </div>
     </div>

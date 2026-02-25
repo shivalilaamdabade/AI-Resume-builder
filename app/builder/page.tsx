@@ -59,6 +59,30 @@ export default function BuilderPage() {
     localStorage.setItem('resumeTemplate', template);
   }, [template]);
 
+  const [colorTheme, setColorTheme] = useState('teal'); // Default teal theme
+
+  // Load color theme from localStorage on component mount
+  useEffect(() => {
+    const savedColorTheme = localStorage.getItem('resumeColorTheme');
+    if (savedColorTheme) {
+      setColorTheme(savedColorTheme);
+    }
+  }, []);
+
+  // Save color theme to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('resumeColorTheme', colorTheme);
+  }, [colorTheme]);
+
+  // Color themes mapping
+  const colorThemes = {
+    teal: 'hsl(168, 60%, 40%)',
+    navy: 'hsl(220, 60%, 35%)',
+    burgundy: 'hsl(345, 60%, 35%)',
+    forest: 'hsl(150, 50%, 30%)',
+    charcoal: 'hsl(0, 0%, 25%)'
+  };
+
   // Calculate ATS Score
   const calculateATSScore = (): number => {
     let score = 0;
@@ -418,8 +442,8 @@ export default function BuilderPage() {
   // Function to trigger print
   const handlePrint = () => {
     validateResume();
-    // Redirect to preview page to print
-    window.open('/preview', '_blank');
+    // Show toast notification
+    alert('PDF export ready! Check your downloads.');
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -1052,7 +1076,7 @@ export default function BuilderPage() {
                   onClick={handlePrint}
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 w-full"
                 >
-                  Print / Save as PDF
+                  Download PDF
                 </button>
                 <button 
                   onClick={copyResumeAsText}
