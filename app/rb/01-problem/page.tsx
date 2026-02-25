@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import RbStepPage from '@/app/rb/_components/RbStepPage';
-import { getStepNumber, TOTAL_STEPS } from '@/app/rb/stepsConfig';
+import RbStepPage from '../_components/RbStepPage';
+import { getStepNumber, TOTAL_STEPS } from '../stepsConfig';
 
 const ProblemPage = () => {
   const router = useRouter();

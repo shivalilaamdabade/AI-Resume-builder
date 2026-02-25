@@ -19,7 +19,7 @@ const ProofPage = () => {
     let submission = "AI Resume Builder - Build Track Submission\n";
     submission += "=====================================\n\n";
     
-    STEPS.forEach(step => {
+    STEPS.forEach((step: any) => {
       const stepNumber = getStepNumber(step.id);
       submission += `Step ${stepNumber}: ${step.title}\n`;
       submission += `Status: ${stepStatus[step.id] ? 'COMPLETED' : 'INCOMPLETE'}\n\n`;
@@ -39,7 +39,7 @@ const ProofPage = () => {
     return <div className="p-6">Loading...</div>;
   }
 
-  const allStepsComplete = STEPS.every(step => stepStatus[step.id]);
+  const allStepsComplete = STEPS.every((step: any) => stepStatus[step.id]);
 
   return (
     <div className="flex flex-col h-full">
@@ -74,7 +74,7 @@ const ProofPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {STEPS.map((step, index) => (
+                {STEPS.map((step: any, index: number) => (
                   <tr key={step.id} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
                     <td className="py-2 px-4 border-b">{getStepNumber(step.id)}</td>
                     <td className="py-2 px-4 border-b">{step.title}</td>
