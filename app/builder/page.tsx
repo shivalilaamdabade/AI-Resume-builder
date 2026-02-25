@@ -195,6 +195,112 @@ export default function BuilderPage() {
   const suggestions = getSuggestions();
   const improvementSuggestions = getImprovementSuggestions();
 
+  // Function to copy resume as plain text
+  const copyResumeAsText = () => {
+    let text = '';
+    
+    // Add personal info
+    if (resumeData.personalInfo.name) {
+      text += `${resumeData.personalInfo.name}\n`;
+    }
+    
+    // Add contact info
+    if (resumeData.personalInfo.email) {
+      text += `${resumeData.personalInfo.email}\n`;
+    }
+    if (resumeData.personalInfo.phone) {
+      text += `${resumeData.personalInfo.phone}\n`;
+    }
+    if (resumeData.personalInfo.location) {
+      text += `${resumeData.personalInfo.location}\n`;
+    }
+    
+    // Add summary
+    if (resumeData.summary) {
+      text += `\nSUMMARY\n${resumeData.summary}\n`;
+    }
+    
+    // Add education
+    if (resumeData.education && resumeData.education.some(edu => 
+      edu.institution.trim() !== "" || edu.degree.trim() !== "" || edu.year.trim() !== ""
+    )) {
+      text += `\nEDUCATION\n`;
+      resumeData.education.forEach(edu => {
+        if (edu.institution.trim() !== "" || edu.degree.trim() !== "" || edu.year.trim() !== "") {
+          if (edu.institution) text += `${edu.institution}\n`;
+          if (edu.degree) text += `${edu.degree}\n`;
+          if (edu.year) text += `${edu.year}\n`;
+          text += '\n';
+        }
+      });
+    }
+    
+    // Add experience
+    if (resumeData.experience && resumeData.experience.some(exp => 
+      exp.company.trim() !== "" || exp.position.trim() !== "" || exp.description.trim() !== ""
+    )) {
+      text += `\nEXPERIENCE\n`;
+      resumeData.experience.forEach(exp => {
+        if (exp.company.trim() !== "" || exp.position.trim() !== "" || exp.description.trim() !== "") {
+          if (exp.position) text += `${exp.position}\n`;
+          if (exp.company) text += `${exp.company}\n`;
+          if (exp.duration) text += `${exp.duration}\n`;
+          if (exp.description) text += `${exp.description}\n`;
+          text += '\n';
+        }
+      });
+    }
+    
+    // Add projects
+    if (resumeData.projects && resumeData.projects.some(proj => 
+      proj.name.trim() !== "" || proj.description.trim() !== "" || proj.link.trim() !== ""
+    )) {
+      text += `\nPROJECTS\n`;
+      resumeData.projects.forEach(proj => {
+        if (proj.name.trim() !== "" || proj.description.trim() !== "" || proj.link.trim() !== "") {
+          if (proj.name) text += `${proj.name}\n`;
+          if (proj.description) text += `${proj.description}\n`;
+          if (proj.link) text += `${proj.link}\n`;
+          text += '\n';
+        }
+      });
+    }
+    
+    // Add skills
+    if (resumeData.skills) {
+      text += `\nSKILLS\n${resumeData.skills}\n`;
+    }
+    
+    // Add links
+    if (resumeData.links.github || resumeData.links.linkedin) {
+      text += `\nLINKS\n`;
+      if (resumeData.links.github) text += `GitHub: ${resumeData.links.github}\n`;
+      if (resumeData.links.linkedin) text += `LinkedIn: ${resumeData.links.linkedin}\n`;
+    }
+    
+    navigator.clipboard.writeText(text);
+    alert('Resume copied to clipboard as plain text!');
+  };
+
+  // Function to validate resume before export
+  const validateResume = () => {
+    const hasName = resumeData.personalInfo.name && resumeData.personalInfo.name.trim() !== "";
+    const hasProjectOrExperience = 
+      resumeData.projects.some(proj => proj.name.trim() !== "") ||
+      resumeData.experience.some(exp => exp.company.trim() !== "");
+    
+    if (!hasName || !hasProjectOrExperience) {
+      alert('Your resume may look incomplete.');
+    }
+  };
+
+  // Function to trigger print
+  const handlePrint = () => {
+    validateResume();
+    // Redirect to preview page to print
+    window.open('/preview', '_blank');
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setResumeData(prev => ({
       ...prev,
@@ -643,7 +749,7 @@ export default function BuilderPage() {
           </div>
 
           {/* Right Column - Live Preview Panel */}
-          <div className="bg-white p-6 rounded-lg shadow-md h-fit">
+          <div className="bg-white p-6 rounded-lg shadow-md h-fit print:hidden">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Live Preview</h3>
             <div className="mb-6">
               <div className="flex justify-between items-center mb-1">
@@ -688,6 +794,25 @@ export default function BuilderPage() {
                 </div>
               )}
             </div>
+            
+            {/* Export buttons */}
+            <div className="mb-4">
+              <div className="flex space-x-2">
+                <button 
+                  onClick={handlePrint}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 w-full"
+                >
+                  Print / Save as PDF
+                </button>
+                <button 
+                  onClick={copyResumeAsText}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 w-full"
+                >
+                  Copy Resume as Text
+                </button>
+              </div>
+            </div>
+            
             <div className="border border-gray-200 rounded-md p-4 min-h-[400px]">
               <ResumePreview data={resumeData} template={template} />
             </div>

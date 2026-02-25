@@ -426,3 +426,121 @@ button {
   }
 }
 
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  
+  .print\:bg-white {
+    background-color: white !important;
+  }
+  
+  .print\:text-black {
+    color: black !important;
+  }
+  
+  .print\:border-0 {
+    border: 0 !important;
+  }
+  
+  .print\:border-b {
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+  
+  .print\:pb-4 {
+    padding-bottom: 1rem !important;
+  }
+  
+  .print\:mb-4 {
+    margin-bottom: 1rem !important;
+  }
+  
+  .print\:mt-2 {
+    margin-top: 0.5rem !important;
+  }
+  
+  .print\:text-2xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+  
+  .print\:text-lg {
+    font-size: 1.125rem !important;
+    line-height: 1.75rem !important;
+  }
+  
+  .print\:font-semibold {
+    font-weight: 600 !important;
+  }
+  
+  .print\:uppercase {
+    text-transform: uppercase !important;
+  }
+  
+  .print\:tracking-wide {
+    letter-spacing: 0.025em !important;
+  }
+  
+  .print\:tracking-wider {
+    letter-spacing: 0.05em !important;
+  }
+  
+  .print\:text-xs {
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+  }
+  
+  .print\:ml-auto {
+    margin-left: auto !important;
+  }
+  
+  .print\:mt-0\.5 {
+    margin-top: 0.125rem !important;
+  }
+  
+  .print\:space-y-2 > :not(:first-child) {
+    margin-top: 0.5rem !important;
+  }
+  
+  .print\:space-y-3 > :not(:first-child) {
+    margin-top: 0.75rem !important;
+  }
+  
+  .print\:p-12 {
+    padding: 3rem !important;
+  }
+  
+  .break-inside-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  .print\:break-inside-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  .print\:flex {
+    display: flex !important;
+  }
+  
+  .print\:justify-between {
+    justify-content: space-between !important;
+  }
+  
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  /* Ensure clean margins and spacing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
