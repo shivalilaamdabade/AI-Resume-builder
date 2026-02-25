@@ -465,13 +465,6 @@ export default function BuilderPage() {
     }));
   };
 
-  const addProjectEntry = () => {
-    setResumeData(prev => ({
-      ...prev,
-      projects: [...prev.projects, { title: "", description: "", techStack: [], liveUrl: "", githubUrl: "" }]
-    }));
-  };
-
   const loadSampleData = () => {
     setResumeData({
       personalInfo: {
