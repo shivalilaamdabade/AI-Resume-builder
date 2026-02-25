@@ -1,1 +1,46 @@
-node_modules
+.next/
+node_modules/
+npm-debug.log*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+out/
+*.log
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Next.js specific
+.next/
+out/
+build/
+.nft.json
+.next/**/*
+!.next/static
+!.next/static/**/*
+
+# Node specific
+dist/
+logs/
+tmp/
+.nyc_output/
+coverage/
