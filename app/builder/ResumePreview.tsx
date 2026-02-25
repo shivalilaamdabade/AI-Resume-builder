@@ -19,14 +19,22 @@ interface ExperienceEntry {
 }
 
 interface ProjectEntry {
-  name: string;
+  title: string;
   description: string;
-  link: string;
+  techStack: string[];
+  liveUrl: string;
+  githubUrl: string;
 }
 
 interface Links {
   github: string;
   linkedin: string;
+}
+
+interface Skills {
+  technical: string[];
+  soft: string[];
+  tools: string[];
 }
 
 interface ResumeData {
@@ -35,7 +43,7 @@ interface ResumeData {
   education: EducationEntry[];
   experience: ExperienceEntry[];
   projects: ProjectEntry[];
-  skills: string;
+  skills: Skills;
   links: Links;
 }
 
@@ -54,9 +62,13 @@ export default function ResumePreview({ data, template = 'classic' }: ResumePrev
     exp.company.trim() !== "" || exp.position.trim() !== "" || exp.description.trim() !== ""
   );
   const hasProjects = data.projects && data.projects.some((proj: ProjectEntry) => 
-    proj.name.trim() !== "" || proj.description.trim() !== "" || proj.link.trim() !== ""
+    proj.title.trim() !== "" || proj.description.trim() !== "" || proj.liveUrl.trim() !== "" || proj.githubUrl.trim() !== ""
   );
-  const hasSkills = data.skills && data.skills.trim() !== "";
+  const hasSkills = data.skills && (
+    data.skills.technical.length > 0 || 
+    data.skills.soft.length > 0 || 
+    data.skills.tools.length > 0
+  );
   const hasLinks = (data.links.github && data.links.github.trim() !== "") || 
                   (data.links.linkedin && data.links.linkedin.trim() !== "");
 
@@ -98,6 +110,35 @@ export default function ResumePreview({ data, template = 'classic' }: ResumePrev
             SUMMARY
           </h2>
           <p className="mt-2 print:mt-2">{data.summary}</p>
+        </div>
+      )}
+
+      {/* Skills */}
+      {hasSkills && (
+        <div className="mb-4 print:mb-4 break-inside-avoid">
+          <h2 className={`${getTemplateClass("text-lg font-semibold border-b pb-1 print:text-lg print:font-semibold print:border-b print:pb-1")} ${(template === 'minimal') ? 'uppercase tracking-wider text-xs print:uppercase print:tracking-wider print:text-xs' : ''}`}>
+            SKILLS
+          </h2>
+          <div className="mt-2 print:mt-2">
+            {data.skills.technical.length > 0 && (
+              <div className="mb-2">
+                <span className="font-medium">Technical: </span>
+                {data.skills.technical.join(", ")}
+              </div>
+            )}
+            {data.skills.soft.length > 0 && (
+              <div className="mb-2">
+                <span className="font-medium">Soft: </span>
+                {data.skills.soft.join(", ")}
+              </div>
+            )}
+            {data.skills.tools.length > 0 && (
+              <div>
+                <span className="font-medium">Tools: </span>
+                {data.skills.tools.join(", ")}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -163,31 +204,35 @@ export default function ResumePreview({ data, template = 'classic' }: ResumePrev
           <div className="mt-2 space-y-2 print:mt-2 print:space-y-2">
             {data.projects.map((proj: ProjectEntry, index: number) => {
               // Skip empty project entries
-              if (proj.name.trim() === "" && proj.description.trim() === "" && proj.link.trim() === "") {
+              if (proj.title.trim() === "" && proj.description.trim() === "" && proj.liveUrl.trim() === "" && proj.githubUrl.trim() === "") {
                 return null;
               }
               return (
                 <div key={index} className="print:break-inside-avoid">
                   <div className="flex justify-between print:flex print:justify-between">
-                    <span className="font-medium print:font-medium">{proj.name || "Project Name"}</span>
-                    {proj.link && <span className="print:ml-auto">{proj.link}</span>}
+                    <span className="font-medium print:font-medium">{proj.title || "Project Title"}</span>
+                    <div className="flex space-x-2">
+                      {proj.liveUrl && (
+                        <span className="text-blue-600">🌐</span>
+                      )}
+                      {proj.githubUrl && (
+                        <span className="text-gray-600">🔗</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="print:mt-0.5">{proj.description || "Project description"}</div>
+                  <div className="mt-1 print:mt-1">{proj.description || "Project description"}</div>
+                  {proj.techStack && proj.techStack.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {proj.techStack.map((tech, techIdx) => (
+                        <span key={techIdx} className="text-xs bg-gray-200 px-2 py-0.5 rounded">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             }).filter(Boolean)}
-          </div>
-        </div>
-      )}
-
-      {/* Skills */}
-      {hasSkills && (
-        <div className="break-inside-avoid">
-          <h2 className={`${getTemplateClass("text-lg font-semibold border-b pb-1 print:text-lg print:font-semibold print:border-b print:pb-1")} ${(template === 'minimal') ? 'uppercase tracking-wider text-xs print:uppercase print:tracking-wider print:text-xs' : ''}`}>
-            SKILLS
-          </h2>
-          <div className="mt-2 print:mt-2">
-            {data.skills}
           </div>
         </div>
       )}

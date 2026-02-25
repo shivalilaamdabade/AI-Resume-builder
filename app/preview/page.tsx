@@ -16,8 +16,12 @@ export default function PreviewPage() {
     summary: "",
     education: [{ institution: "", degree: "", year: "" }],
     experience: [{ company: "", position: "", duration: "", description: "" }],
-    projects: [{ name: "", description: "", link: "" }],
-    skills: "",
+    projects: [{ title: "", description: "", techStack: [], liveUrl: "", githubUrl: "" }],
+    skills: {
+      technical: [],
+      soft: [],
+      tools: []
+    },
     links: {
       github: "",
       linkedin: "",
@@ -103,14 +107,15 @@ export default function PreviewPage() {
     
     // Add projects
     if (resumeData.projects && resumeData.projects.some(proj => 
-      proj.name.trim() !== "" || proj.description.trim() !== "" || proj.link.trim() !== ""
+      proj.title.trim() !== "" || proj.description.trim() !== "" || proj.liveUrl.trim() !== "" || proj.githubUrl.trim() !== ""
     )) {
       text += `\nPROJECTS\n`;
       resumeData.projects.forEach(proj => {
-        if (proj.name.trim() !== "" || proj.description.trim() !== "" || proj.link.trim() !== "") {
-          if (proj.name) text += `${proj.name}\n`;
+        if (proj.title.trim() !== "" || proj.description.trim() !== "" || proj.liveUrl.trim() !== "" || proj.githubUrl.trim() !== "") {
+          if (proj.title) text += `${proj.title}\n`;
           if (proj.description) text += `${proj.description}\n`;
-          if (proj.link) text += `${proj.link}\n`;
+          if (proj.liveUrl) text += `Live: ${proj.liveUrl}\n`;
+          if (proj.githubUrl) text += `GitHub: ${proj.githubUrl}\n`;
           text += '\n';
         }
       });
@@ -118,7 +123,16 @@ export default function PreviewPage() {
     
     // Add skills
     if (resumeData.skills) {
-      text += `\nSKILLS\n${resumeData.skills}\n`;
+      text += `\nSKILLS\n`;
+      if (resumeData.skills.technical.length > 0) {
+        text += `Technical: ${resumeData.skills.technical.join(', ')}\n`;
+      }
+      if (resumeData.skills.soft.length > 0) {
+        text += `Soft: ${resumeData.skills.soft.join(', ')}\n`;
+      }
+      if (resumeData.skills.tools.length > 0) {
+        text += `Tools: ${resumeData.skills.tools.join(', ')}\n`;
+      }
     }
     
     // Add links
@@ -136,7 +150,7 @@ export default function PreviewPage() {
   const validateResume = () => {
     const hasName = resumeData.personalInfo.name && resumeData.personalInfo.name.trim() !== "";
     const hasProjectOrExperience = 
-      resumeData.projects.some(proj => proj.name.trim() !== "") ||
+      resumeData.projects.some(proj => proj.title.trim() !== "") ||
       resumeData.experience.some(exp => exp.company.trim() !== "");
     
     if (!hasName || !hasProjectOrExperience) {

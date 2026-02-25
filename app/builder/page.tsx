@@ -15,8 +15,12 @@ export default function BuilderPage() {
     summary: "",
     education: [{ institution: "", degree: "", year: "" }],
     experience: [{ company: "", position: "", duration: "", description: "" }],
-    projects: [{ name: "", description: "", link: "" }],
-    skills: "",
+    projects: [{ title: "", description: "", techStack: [], liveUrl: "", githubUrl: "" }], // Updated projects structure
+    skills: {
+      technical: [],
+      soft: [],
+      tools: []
+    }, // New skills structure
     links: {
       github: "",
       linkedin: "",
@@ -75,9 +79,9 @@ export default function BuilderPage() {
       score += 10;
     }
     
-    // Check for at least 8 skills
-    const skillsList = resumeData.skills.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0);
-    if (skillsList.length >= 8) {
+    // Check for at least 8 skills total
+    const totalSkills = [...resumeData.skills.technical, ...resumeData.skills.soft, ...resumeData.skills.tools].length;
+    if (totalSkills >= 8) {
       score += 10;
     }
     
@@ -124,8 +128,9 @@ export default function BuilderPage() {
       suggestions.push("Add at least 1 experience entry." );
     }
     
-    const skillsList = resumeData.skills.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0);
-    if (skillsList.length < 8) {
+    // Check for at least 8 skills total
+    const totalSkills = [...resumeData.skills.technical, ...resumeData.skills.soft, ...resumeData.skills.tools].length;
+    if (totalSkills < 8) {
       suggestions.push("Add more skills (target 8+)." );
     }
     
@@ -167,8 +172,9 @@ export default function BuilderPage() {
       improvements.push("Expand your summary to better showcase your experience.");
     }
 
-    const skillsList = resumeData.skills.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0);
-    if (skillsList.length < 8) {
+    // Check for at least 8 skills total
+    const totalSkills = [...resumeData.skills.technical, ...resumeData.skills.soft, ...resumeData.skills.tools].length;
+    if (totalSkills < 8) {
       improvements.push("Add more relevant skills to improve keyword matching.");
     }
 
@@ -177,6 +183,111 @@ export default function BuilderPage() {
     }
 
     return improvements.slice(0, 3); // Limit to top 3 improvements
+  };
+
+  // Handle skill input (Enter key to add skill)
+  const handleSkillInput = (e: React.KeyboardEvent<HTMLInputElement>, category: keyof typeof resumeData.skills) => {
+    if (e.key === 'Enter' && e.currentTarget.value.trim() !== '') {
+      const newSkill = e.currentTarget.value.trim();
+      setResumeData(prev => ({
+        ...prev,
+        skills: {
+          ...prev.skills,
+          [category]: [...prev.skills[category], newSkill]
+        }
+      }));
+      e.currentTarget.value = ''; // Clear input after adding
+    }
+  };
+
+  // Remove a skill from a category
+  const removeSkill = (category: keyof typeof resumeData.skills, index: number) => {
+    setResumeData(prev => ({
+      ...prev,
+      skills: {
+        ...prev.skills,
+        [category]: prev.skills[category].filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  // Suggest skills based on category
+  const suggestSkills = async (category: keyof typeof resumeData.skills) => {
+    // Show loading state
+    // In a real app, we'd have a loading state, but for now we'll just simulate with a timeout
+    const suggestedSkillsMap: Record<string, string[]> = {
+      technical: ["TypeScript", "React", "Node.js", "PostgreSQL", "GraphQL"],
+      soft: ["Team Leadership", "Problem Solving"],
+      tools: ["Git", "Docker", "AWS"]
+    };
+
+    const newSkills = suggestedSkillsMap[category];
+    if (newSkills) {
+      // Simulate loading for 1 second
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setResumeData(prev => ({
+        ...prev,
+        skills: {
+          ...prev.skills,
+          [category]: Array.from(new Set([...prev.skills[category], ...newSkills])) // Use Set to avoid duplicates
+        }
+      }));
+    }
+  };
+
+  // Add a new project entry
+  const addProjectEntry = () => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: [...prev.projects, { title: "", description: "", techStack: [], liveUrl: "", githubUrl: "" }]
+    }));
+  };
+
+  // Remove a project entry
+  const removeProjectEntry = (index: number) => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: prev.projects.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Handle tech stack input (Enter key to add tech)
+  const handleTechStackInput = (e: React.KeyboardEvent<HTMLInputElement>, projectIndex: number) => {
+    if (e.key === 'Enter' && e.currentTarget.value.trim() !== '') {
+      const newTech = e.currentTarget.value.trim();
+      setResumeData(prev => ({
+        ...prev,
+        projects: prev.projects.map((proj, idx) => 
+          idx === projectIndex 
+            ? { ...proj, techStack: [...proj.techStack, newTech] } 
+            : proj
+        )
+      }));
+      e.currentTarget.value = ''; // Clear input after adding
+    }
+  };
+
+  // Handle changes to project fields
+  const handleProjectChange = (projectIndex: number, field: string, value: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: prev.projects.map((proj, idx) => 
+        idx === projectIndex ? { ...proj, [field]: value } : proj
+      )
+    }));
+  };
+
+  // Remove a tech stack item
+  const removeTechStackItem = (projectIndex: number, techIndex: number) => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: prev.projects.map((proj, idx) => 
+        idx === projectIndex 
+          ? { ...proj, techStack: proj.techStack.filter((_, i) => i !== techIndex) } 
+          : proj
+      )
+    }));
   };
 
   // Check if bullet starts with action verb
@@ -253,14 +364,15 @@ export default function BuilderPage() {
     
     // Add projects
     if (resumeData.projects && resumeData.projects.some(proj => 
-      proj.name.trim() !== "" || proj.description.trim() !== "" || proj.link.trim() !== ""
+      proj.title.trim() !== "" || proj.description.trim() !== "" || proj.liveUrl.trim() !== "" || proj.githubUrl.trim() !== ""
     )) {
       text += `\nPROJECTS\n`;
       resumeData.projects.forEach(proj => {
-        if (proj.name.trim() !== "" || proj.description.trim() !== "" || proj.link.trim() !== "") {
-          if (proj.name) text += `${proj.name}\n`;
+        if (proj.title.trim() !== "" || proj.description.trim() !== "" || proj.liveUrl.trim() !== "" || proj.githubUrl.trim() !== "") {
+          if (proj.title) text += `${proj.title}\n`;
           if (proj.description) text += `${proj.description}\n`;
-          if (proj.link) text += `${proj.link}\n`;
+          if (proj.liveUrl) text += `Live: ${proj.liveUrl}\n`;
+          if (proj.githubUrl) text += `GitHub: ${proj.githubUrl}\n`;
           text += '\n';
         }
       });
@@ -268,7 +380,16 @@ export default function BuilderPage() {
     
     // Add skills
     if (resumeData.skills) {
-      text += `\nSKILLS\n${resumeData.skills}\n`;
+      text += `\nSKILLS\n`;
+      if (resumeData.skills.technical.length > 0) {
+        text += `Technical: ${resumeData.skills.technical.join(', ')}\n`;
+      }
+      if (resumeData.skills.soft.length > 0) {
+        text += `Soft: ${resumeData.skills.soft.join(', ')}\n`;
+      }
+      if (resumeData.skills.tools.length > 0) {
+        text += `Tools: ${resumeData.skills.tools.join(', ')}\n`;
+      }
     }
     
     // Add links
@@ -286,7 +407,7 @@ export default function BuilderPage() {
   const validateResume = () => {
     const hasName = resumeData.personalInfo.name && resumeData.personalInfo.name.trim() !== "";
     const hasProjectOrExperience = 
-      resumeData.projects.some(proj => proj.name.trim() !== "") ||
+      resumeData.projects.some(proj => proj.title.trim() !== "") ||
       resumeData.experience.some(exp => exp.company.trim() !== "");
     
     if (!hasName || !hasProjectOrExperience) {
@@ -330,12 +451,6 @@ export default function BuilderPage() {
     setResumeData(prev => ({ ...prev, experience: newExperience }));
   };
 
-  const handleProjectsChange = (index: number, field: string, value: string) => {
-    const newProjects = [...resumeData.projects];
-    newProjects[index] = { ...newProjects[index], [field]: value };
-    setResumeData(prev => ({ ...prev, projects: newProjects }));
-  };
-
   const addEducationEntry = () => {
     setResumeData(prev => ({
       ...prev,
@@ -353,7 +468,7 @@ export default function BuilderPage() {
   const addProjectEntry = () => {
     setResumeData(prev => ({
       ...prev,
-      projects: [...prev.projects, { name: "", description: "", link: "" }]
+      projects: [...prev.projects, { title: "", description: "", techStack: [], liveUrl: "", githubUrl: "" }]
     }));
   };
 
@@ -386,17 +501,25 @@ export default function BuilderPage() {
       ],
       projects: [
         { 
-          name: "E-commerce Platform", 
+          title: "E-commerce Platform", 
           description: "Full-stack e-commerce solution with payment integration", 
-          link: "https://github.com/example/ecommerce" 
+          techStack: ["React", "Node.js", "PostgreSQL"],
+          liveUrl: "https://ecommerce-platform-demo.com",
+          githubUrl: "https://github.com/example/ecommerce" 
         },
         { 
-          name: "Task Management App", 
+          title: "Task Management App", 
           description: "Collaborative task management application with real-time updates", 
-          link: "https://github.com/example/taskapp" 
+          techStack: ["Vue.js", "Express", "MongoDB"],
+          liveUrl: "https://task-app-demo.com",
+          githubUrl: "https://github.com/example/taskapp" 
         }
       ],
-      skills: "JavaScript, React, Node.js, Python, SQL, AWS, Docker",
+      skills: {
+        technical: ["JavaScript", "React", "Node.js", "Python", "SQL"],
+        soft: ["Leadership", "Communication", "Problem-solving"],
+        tools: ["Git", "Docker", "AWS"]
+      },
       links: {
         github: "https://github.com/alexjohnson",
         linkedin: "https://linkedin.com/in/alexjohnson"
@@ -647,7 +770,108 @@ export default function BuilderPage() {
               </div>
             </div>
 
-            {/* Projects Section */}
+            {/* Skills Section - NEW */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Skills</h3>
+              
+              {/* Technical Skills */}
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-medium text-gray-700">Technical Skills ({resumeData.skills.technical.length})</h4>
+                  <button 
+                    onClick={() => suggestSkills('technical')}
+                    className="text-sm px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200"
+                  >
+                    ✨ Suggest Skills
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[50px]">
+                  {resumeData.skills.technical.map((skill, index) => (
+                    <div key={index} className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                      {skill}
+                      <button 
+                        onClick={() => removeSkill('technical', index)}
+                        className="ml-2 text-blue-600 hover:text-blue-800"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <input
+                    type="text"
+                    placeholder="Type skill and press Enter..."
+                    onKeyDown={(e) => handleSkillInput(e, 'technical')}
+                    className="flex-1 min-w-[150px] p-2 border-0 focus:outline-none"
+                  />
+                </div>
+              </div>
+              
+              {/* Soft Skills */}
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-medium text-gray-700">Soft Skills ({resumeData.skills.soft.length})</h4>
+                  <button 
+                    onClick={() => suggestSkills('soft')}
+                    className="text-sm px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200"
+                  >
+                    ✨ Suggest Skills
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[50px]">
+                  {resumeData.skills.soft.map((skill, index) => (
+                    <div key={index} className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                      {skill}
+                      <button 
+                        onClick={() => removeSkill('soft', index)}
+                        className="ml-2 text-green-600 hover:text-green-800"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <input
+                    type="text"
+                    placeholder="Type skill and press Enter..."
+                    onKeyDown={(e) => handleSkillInput(e, 'soft')}
+                    className="flex-1 min-w-[150px] p-2 border-0 focus:outline-none"
+                  />
+                </div>
+              </div>
+              
+              {/* Tools & Technologies */}
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-medium text-gray-700">Tools & Technologies ({resumeData.skills.tools.length})</h4>
+                  <button 
+                    onClick={() => suggestSkills('tools')}
+                    className="text-sm px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200"
+                  >
+                    ✨ Suggest Skills
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[50px]">
+                  {resumeData.skills.tools.map((skill, index) => (
+                    <div key={index} className="flex items-center bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
+                      {skill}
+                      <button 
+                        onClick={() => removeSkill('tools', index)}
+                        className="ml-2 text-yellow-600 hover:text-yellow-800"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <input
+                    type="text"
+                    placeholder="Type skill and press Enter..."
+                    onKeyDown={(e) => handleSkillInput(e, 'tools')}
+                    className="flex-1 min-w-[150px] p-2 border-0 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Projects Section - NEW */}
             <div className="mb-8">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">Projects</h3>
@@ -655,65 +879,98 @@ export default function BuilderPage() {
                   onClick={addProjectEntry}
                   className="text-sm px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200"
                 >
-                  Add Entry
+                  Add Project
                 </button>
               </div>
+              
               <div className="space-y-4">
                 {resumeData.projects.map((proj, index) => (
                   <div key={index} className="border border-gray-200 p-4 rounded-md">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">Project Name</label>
-                      <input
-                        type="text"
-                        value={proj.name}
-                        onChange={(e) => handleProjectsChange(index, 'name', e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                      />
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="font-medium text-gray-700">{proj.title || `Project ${index + 1}`}</h4>
+                      <button 
+                        onClick={() => removeProjectEntry(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
-                      <textarea
-                        value={proj.description}
-                        onChange={(e) => handleProjectsChange(index, 'description', e.target.value)}
-                        rows={2}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                      />
-                      {/* Bullet guidance */}
-                      {proj.description.trim() && (
-                        <div className="mt-2 text-xs">
-                          {!startsWithActionVerb(proj.description) && (
-                            <div className="text-orange-600">• Start with a strong action verb.</div>
-                          )}
-                          {!hasNumericIndicator(proj.description) && (
-                            <div className="text-orange-600">• Add measurable impact (numbers).</div>
-                          )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Project Title</label>
+                        <input
+                          type="text"
+                          value={proj.title}
+                          onChange={(e) => handleProjectChange(index, 'title', e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
+                      
+                      <div>
+                        <div className="flex justify-between">
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Description (Max 200 chars)</label>
+                          <span className="text-xs text-gray-500">{proj.description.length}/200</span>
                         </div>
-                      )}
+                        <textarea
+                          value={proj.description}
+                          onChange={(e) => handleProjectChange(index, 'description', e.target.value)}
+                          maxLength={200}
+                          rows={2}
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">Link</label>
-                      <input
-                        type="text"
-                        value={proj.link}
-                        onChange={(e) => handleProjectsChange(index, 'link', e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                      />
+                    
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Tech Stack</label>
+                      <div className="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[50px]">
+                        {proj.techStack.map((tech, techIndex) => (
+                          <div key={techIndex} className="flex items-center bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm">
+                            {tech}
+                            <button 
+                              onClick={() => removeTechStackItem(index, techIndex)}
+                              className="ml-2 text-indigo-600 hover:text-indigo-800"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        <input
+                          type="text"
+                          placeholder="Add technology and press Enter..."
+                          onKeyDown={(e) => handleTechStackInput(e, index)}
+                          className="flex-1 min-w-[150px] p-2 border-0 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Live URL</label>
+                        <input
+                          type="text"
+                          value={proj.liveUrl}
+                          onChange={(e) => handleProjectChange(index, 'liveUrl', e.target.value)}
+                          placeholder="https://example.com"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">GitHub URL</label>
+                        <input
+                          type="text"
+                          value={proj.githubUrl}
+                          onChange={(e) => handleProjectChange(index, 'githubUrl', e.target.value)}
+                          placeholder="https://github.com/username/repo"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Skills Section */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">Skills</h3>
-              <input
-                type="text"
-                value={resumeData.skills}
-                onChange={(e) => handleInputChange('skills', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                placeholder="Enter skills separated by commas (e.g. JavaScript, React, Node.js)"
-              />
             </div>
 
             {/* Links Section */}
